@@ -1,5 +1,6 @@
 package com.aayush.proxies;
 
+import com.aayush.proxies.annotation.MyTransactional;
 import com.aayush.proxies.service.CustomerService;
 import com.aayush.proxies.service.DefaultCustomerService;
 import java.lang.reflect.Proxy;
@@ -23,10 +24,16 @@ public class SpringProxiesApplication {
 			var proxyInstance = (CustomerService) Proxy.newProxyInstance(target.getClass().getClassLoader(),
 				target.getClass().getInterfaces(),
 				(proxy, method, methodArgs) -> {
-					System.out.println("Before method call");
-					var result = method.invoke(target, methodArgs);
-					System.out.println("After method call");
-					return result;
+					try {
+						if (method.getAnnotation(MyTransactional.class) != null) {
+							System.out.println("Transaction started");
+						}
+						return method.invoke(target, methodArgs);
+					} finally {
+						if (method.getAnnotation(MyTransactional.class) != null) {
+							System.out.println("Transaction committed");
+						}
+					}
 				}
 			);
 
